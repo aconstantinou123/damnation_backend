@@ -25,7 +25,14 @@ def article():
     for article in _articles:
         item = {
             'id': str(article['_id']),
-            'article': article['title']
+            'img_url': article['img_url'],
+            'img_alt': article['img_alt'],
+            'title': article['title'],
+            'author': article['author'],
+            'date': article['date'],
+            'summary': article['summary'],
+            'content': article['content'],
+            'is_main': article['is_main'],
         }
         data.append(item)
 
@@ -37,14 +44,11 @@ def article():
 @application.route('/article', methods=['POST'])
 def createarticle():
     data = request.get_json(force=True)
-    item = {
-        'article': data['article']
-    }
-    db.article.insert_one(item)
+    db.article.insert_one(data['article'])
 
     return jsonify(
         status=True,
-        message='To-do saved successfully!'
+        message='Article saved successfully!'
     ), 201
 
 if __name__ == "__main__":
