@@ -11,10 +11,12 @@ def create_app():
         ':27017/' + os.environ['MONGODB_DATABASE'])
 
     mongo.init_app(application)
+
+    from .routes.login import auth as auth_blueprint
+    application.register_blueprint(auth_blueprint)
+
     from .routes.main import main as main_blueprint
     application.register_blueprint(main_blueprint)
 
-    ENVIRONMENT_DEBUG = os.environ.get('APP_DEBUG', True)
-    ENVIRONMENT_PORT = os.environ.get('APP_PORT', 5000)
-    # application.run(host='0.0.0.0', port=ENVIRONMENT_PORT, debug=ENVIRONMENT_DEBUG)
+
     return application

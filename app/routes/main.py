@@ -2,7 +2,6 @@ import os
 from flask import Flask, request, jsonify
 from flask_pymongo import ObjectId
 from flask import Blueprint
-# from ..db.db import db
 from app.db import mongo
 
 main = Blueprint('main', __name__)
