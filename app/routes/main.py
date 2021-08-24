@@ -3,14 +3,16 @@ from flask import Flask, request, jsonify
 from flask_pymongo import ObjectId
 from flask import Blueprint
 from app.db import mongo
+from app.authentication import token_required
 
 main = Blueprint('main', __name__)
 
 @main.route('/')
-def index():
+@token_required
+def index(decoded_token):
     return jsonify(
         status=True,
-        message='Welcome to the Flask MongoDB app!'
+        message=decoded_token
     )
 
 @main.route('/article')

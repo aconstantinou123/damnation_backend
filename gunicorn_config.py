@@ -10,4 +10,5 @@ raw_env = [
     "FLASK_ENV=development",
     "FLASK_DEBUG=1",
     "SENDFILE=1",
+    "SECRET_KEY=\xe1_\xd8d7B\x95\xcf\xf6}A\xf4T-\xb0\xbap!_\xd9\xb8\x18\xfe~"
 ]

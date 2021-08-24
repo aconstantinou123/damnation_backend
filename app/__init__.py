@@ -12,7 +12,7 @@ def create_app():
 
     mongo.init_app(application)
 
-    from .routes.login import auth as auth_blueprint
+    from .routes.auth import auth as auth_blueprint
     application.register_blueprint(auth_blueprint)
 
     from .routes.main import main as main_blueprint
