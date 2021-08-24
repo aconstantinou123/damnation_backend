@@ -25,17 +25,19 @@ def encode_auth_token(user_id):
 
 
 def token_required(f):
-   @wraps(f)
-   def decorator(*args, **kwargs):
-       token = None
-       if 'Authorization' in request.headers:
-            token = request.headers['Authorization'].split(' ')[1]
-       if not token:
-            return jsonify({'message': 'a valid token is missing'})
-       try:
-           decoded_token = jwt.decode(token, os.getenv('SECRET_KEY'), algorithms=["HS256"])
-       except:
-           return jsonify({'message': 'token is invalid'})
- 
-       return f(decoded_token, *args, **kwargs)
-   return decorator
+    @wraps(f)
+    def decorator(*args, **kwargs):
+        token = None
+        if 'Authorization' in request.headers:
+                token = request.headers['Authorization'].split(' ')[1]
+        elif 'token' in request.cookies:
+                token = request.cookies['token']
+        if not token:
+                return jsonify({'message': 'a valid token is missing'})
+        try:
+            decoded_token = jwt.decode(token, os.getenv('SECRET_KEY'), algorithms=["HS256"])
+        except:
+            return jsonify({'message': 'token is invalid'})
+    
+        return f(decoded_token, *args, **kwargs)
+    return decorator

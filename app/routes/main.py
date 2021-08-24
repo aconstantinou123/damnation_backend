@@ -41,7 +41,8 @@ def article():
     )
 
 @main.route('/article', methods=['POST'])
-def createarticle():
+@token_required
+def createarticle(decoded_token):
     article = mongo.db.article
     data = request.get_json(force=True)
     article_to_create = data['article']
@@ -67,7 +68,8 @@ def createarticle():
     ), 201
 
 @main.route('/article', methods=['PUT'])
-def editarticle():
+@token_required
+def editarticle(decoded_token):
     article = mongo.db.article
     data = request.get_json(force=True)
     article_to_update = data['article']
@@ -97,4 +99,18 @@ def editarticle():
     return jsonify(
         status=True,
         message='Article edited successfully!'
-    ), 201
+    ), 204
+
+
+@main.route('/article/<id>', methods=['DELETE'])
+@token_required
+def deletearticle(decoded_token, id):
+
+    article = mongo.db.article
+    article.delete_one({'_id': ObjectId(id)})
+
+    return jsonify(
+        status=True,
+        message='Article deleted successfully!'
+    ), 204
+

@@ -3,7 +3,7 @@ from flask import request, jsonify, make_response
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_pymongo import ObjectId
 from app.db import mongo
-from app.authentication import encode_auth_token
+from app.authentication import encode_auth_token, token_required
 
 auth = Blueprint('auth', __name__)
 
@@ -14,23 +14,24 @@ def login():
     email = data['email']
     password = data['password']
 
-    existing_user = user.find_one({ 'email': email})
-    if not existing_user or not check_password_hash(existing_user['password'], password):
+    authenticated_user = user.find_one({ 'email': email})
+    if not authenticated_user or not check_password_hash(authenticated_user['password'], password):
         return 'Incorrect credentials', 401
 
-    token = encode_auth_token(str(existing_user['_id']))
+    token = encode_auth_token(str(authenticated_user['_id']))
 
     body = jsonify(
         status=True,
-        data={
-            'id': str(existing_user['_id']),
-            'email': str(existing_user['email']),
+        user={
+            'id': str(authenticated_user['_id']),
+            'email': str(authenticated_user['email']),
         },
+        token=token,
     )
 
     res = make_response(body, 200)
     res.headers['Authorization'] = f'Bearer {token}'
-
+    res.set_cookie('token', token, httponly=True)
     return res
 
 
@@ -58,4 +59,36 @@ def signup():
             'email': str(inserted_user['email']),
         },
     ), 201
+
+@auth.route('/persist-login', methods=['POST'])
+@token_required
+def index(decoded_token):
+    user = mongo.db.user
+    _id = decoded_token['sub']
+
+    authenticated_user = user.find_one({'_id': ObjectId(_id)})
+    if not authenticated_user:
+        return 'Unknown user', 401
+
+    token = encode_auth_token(str(authenticated_user['_id']))
+
+    body = jsonify(
+        status=True,
+        user={
+            'id': str(authenticated_user['_id']),
+            'email': str(authenticated_user['email']),
+        },
+        token=token,
+    )
+
+    res = make_response(body, 200)
+    res.headers['Authorization'] = f'Bearer {token}'
+    res.set_cookie('token', token, httponly=True)
+    return res
+
+@auth.route('/logout', methods=['POST'])
+def logout():
+    res = make_response('Logout successful', 204)
+    res.delete_cookie(key='token') 
+    return res
 
