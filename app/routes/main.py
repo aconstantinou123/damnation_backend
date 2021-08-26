@@ -17,8 +17,13 @@ def index(decoded_token):
 
 @main.route('/article')
 def article():
+    page_number = request.args.get('pageNumber')
+    skip_amount = (int(page_number) - 1) * 9
     article = mongo.db.article
-    _articles = article.find()
+    _articles = (article.find()
+                        .sort( [['_id', -1]] )
+                        .skip(skip_amount)
+                        .limit(9))
 
     item = {}
     data = []
@@ -39,6 +44,34 @@ def article():
         status=True,
         data=data
     )
+
+
+@main.route('/article/<id>')
+def article_by_id(id):
+    article = mongo.db.article
+    article = article.find_one({ '_id': ObjectId(id) })
+    item = {
+        'id': str(article['_id']),
+        'img_url': article['img_url'],
+        'img_alt': article['img_alt'],
+        'title': article['title'],
+        'author': article['author'],
+        'date': article['date'],
+        'summary': article['summary'],
+        'content': article['content'],
+        'is_main': article['is_main'],
+    }
+    return jsonify(
+        status=True,
+        data=item
+    )
+
+
+@main.route('/article-count')
+def article_count():
+    article = mongo.db.article
+    count = article.count()
+    return jsonify({ 'total': count })
 
 @main.route('/article', methods=['POST'])
 @token_required

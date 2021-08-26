@@ -11,6 +11,7 @@ auth = Blueprint('auth', __name__)
 def login():
     user = mongo.db.user
     data = request.get_json(force=True)
+    print('login data', data)
     email = data['email']
     password = data['password']
 
