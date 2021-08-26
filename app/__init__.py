@@ -2,10 +2,15 @@ import os
 from flask import Flask
 from .routes import main
 from .db import mongo
+from flask_cors import CORS
 
 
 def create_app():
     application = Flask(__name__)
+
+    CORS(application)
+    application.config['CORS_ORIGINS'] = ['localhost', 'thedamnation']
+
     application.config['MONGO_URI'] = ('mongodb://' + os.environ['MONGODB_USERNAME'] +
         ':' + os.environ['MONGODB_PASSWORD'] + '@' + os.environ['MONGODB_HOSTNAME'] +
         ':27017/' + os.environ['MONGODB_DATABASE'])
