@@ -17,10 +17,14 @@ def index(decoded_token):
 
 @main.route('/article')
 def article():
+    query = {}
+    date = request.args.get('date', None)
+    if date:
+        query['date'] = { '$regex' :  date }
     page_number = request.args.get('pageNumber')
     skip_amount = (int(page_number) - 1) * 9
     article = mongo.db.article
-    _articles = (article.find()
+    _articles = (article.find(query)
                         .sort( [['_id', -1]] )
                         .skip(skip_amount)
                         .limit(9))
@@ -43,6 +47,22 @@ def article():
     return jsonify(
         status=True,
         data=data
+    )
+
+
+@main.route('/article-dates')
+def article_dates():
+    article = mongo.db.article
+    _articles = (article.find({}, { 'date': 1 }))
+    
+    data = []
+    for article in _articles:
+        date_list = article['date'].split(' ')
+        month_and_year = f'{date_list[1]} {date_list[2]}'
+        data.append(month_and_year)
+    unique_dates = list(set(data))
+    return jsonify(
+        dates=unique_dates
     )
 
 
@@ -69,8 +89,12 @@ def article_by_id(id):
 
 @main.route('/article-count')
 def article_count():
+    query = {}
+    date = request.args.get('date', None)
+    if date:
+        query['date'] = { '$regex' :  date }
     article = mongo.db.article
-    count = article.count()
+    count = article.find(query).count()
     return jsonify({ 'total': count })
 
 @main.route('/article', methods=['POST'])
