@@ -37,6 +37,7 @@ def login():
 
 
 @auth.route('/signup', methods=['POST'])
+@token_required
 def signup():
     user = mongo.db.user
     data = request.get_json(force=True)

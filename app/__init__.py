@@ -23,5 +23,7 @@ def create_app():
     from .routes.main import main as main_blueprint
     application.register_blueprint(main_blueprint)
 
+    from .routes.content import content as content_blueprint
+    application.register_blueprint(content_blueprint)
 
     return application
