@@ -15,17 +15,14 @@ def get_content():
                         
     item = {}
     data = []
-    try:
-        for content in _contents:
-            item = {
-                'id': str(content['_id']),
-                'type': content['type'],
-                'title': content['title'],
-                'content': content['content'],
-            }
-            data.append(item)
-    except Exception:
-        print(content)
+    for content in _contents:
+        item = {
+            'id': str(content['_id']),
+            'type': content['type'],
+            'title': content['title'],
+            'content': content['content'],
+        }
+        data.append(item)
     return jsonify(
         status=True,
         data=data
@@ -38,7 +35,6 @@ def editcontent(decoded_token):
     content = mongo.db.content
     data = request.get_json(force=True)
     content_to_update = data['content']
-    print(content_to_update)
     content.find_one_and_update(
         {
             '_id' : ObjectId(content_to_update['id'])

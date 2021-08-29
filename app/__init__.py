@@ -3,6 +3,7 @@ from flask import Flask
 from .routes import main
 from .db import mongo
 from flask_cors import CORS
+from pymongo import TEXT
 
 
 def create_app():
@@ -16,6 +17,10 @@ def create_app():
         ':27017/' + os.environ['MONGODB_DATABASE'])
 
     mongo.init_app(application)
+    db = mongo.db
+    article = db.article
+    article.create_index([('$**', TEXT)], default_language='english')
+
 
     from .routes.auth import auth as auth_blueprint
     application.register_blueprint(auth_blueprint)

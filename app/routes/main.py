@@ -50,6 +50,33 @@ def article():
     )
 
 
+@main.route('/search')
+def search_article():
+    query = request.args.get('query', None)
+    article = mongo.db.article
+    _articles = article.find({'$text': { '$search': query }})
+
+    item = {}
+    data = []
+    for article in _articles:
+        item = {
+            'id': str(article['_id']),
+            'img_url': article['img_url'],
+            'img_alt': article['img_alt'],
+            'title': article['title'],
+            'author': article['author'],
+            'date': article['date'],
+            'summary': article['summary'],
+            'content': article['content'],
+            'is_main': article['is_main'],
+        }
+        data.append(item)
+    return jsonify(
+        status=True,
+        data=data
+    )
+
+
 @main.route('/article-dates')
 def article_dates():
     article = mongo.db.article
@@ -89,12 +116,15 @@ def article_by_id(id):
 
 @main.route('/article-count')
 def article_count():
-    query = {}
+    mongo_query = {}
     date = request.args.get('date', None)
+    query = request.args.get('query', None)
     if date:
-        query['date'] = { '$regex' :  date }
+        mongo_query['date'] = { '$regex' :  date }
+    if query:
+        mongo_query['$text'] = { '$search': query }
     article = mongo.db.article
-    count = article.find(query).count()
+    count = article.find(mongo_query).count()
     return jsonify({ 'total': count })
 
 @main.route('/article', methods=['POST'])
