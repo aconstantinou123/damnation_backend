@@ -53,8 +53,13 @@ def article():
 @main.route('/search')
 def search_article():
     query = request.args.get('query', None)
+    page_number = request.args.get('pageNumber')
+    skip_amount = (int(page_number) - 1) * 9
     article = mongo.db.article
-    _articles = article.find({'$text': { '$search': query }})
+    _articles = (article.find({'$text': { '$search': query }})
+                        .sort( [['_id', -1]] )
+                        .skip(skip_amount)
+                        .limit(9))
 
     item = {}
     data = []
