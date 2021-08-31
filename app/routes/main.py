@@ -20,44 +20,13 @@ def index(decoded_token):
 def article():
     mongo_query = {}
     date = request.args.get('date', None)
+    query = request.args.get('query', None)
     if date:
         mongo_query['date'] = { '$regex' :  date }
+    if query:
+        mongo_query['$text'] = { '$search': query }
     page_number = request.args.get('pageNumber')
     skip_amount = (int(page_number) - 1) * 9
-    article = mongo.db.article
-    _articles = (article.find(mongo_query)
-                        .sort( [['_id', -1]] )
-                        .skip(skip_amount)
-                        .limit(9))
-    count = article.find(mongo_query).count()
-    item = {}
-    data = []
-    for article in _articles:
-        item = {
-            'id': str(article['_id']),
-            'img_url': article['img_url'],
-            'img_alt': article['img_alt'],
-            'title': article['title'],
-            'author': article['author'],
-            'date': article['date'],
-            'summary': article['summary'],
-            'content': article['content'],
-            'is_main': article['is_main'],
-        }
-        data.append(item)
-    return jsonify(
-        status=True,
-        data=data,
-        count=count,
-    )
-
-
-@main.route('/search')
-def search_article():
-    query = request.args.get('query', None)
-    page_number = request.args.get('pageNumber')
-    skip_amount = (int(page_number) - 1) * 9
-    mongo_query = {'$text': { '$search': query }}
     article = mongo.db.article
     _articles = (article.find(mongo_query)
                         .sort( [['_id', -1]] )
