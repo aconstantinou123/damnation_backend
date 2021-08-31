@@ -21,11 +21,16 @@ def article():
     mongo_query = {}
     date = request.args.get('date', None)
     query = request.args.get('query', None)
+    is_main = request.args.get('main', None)
+    page_number = request.args.get('pageNumber')
+    print(is_main)
+    if is_main and not query and not date:
+        mongo_query['is_main'] = True if is_main == 'true' else False
     if date:
         mongo_query['date'] = { '$regex' :  date }
     if query:
         mongo_query['$text'] = { '$search': query }
-    page_number = request.args.get('pageNumber')
+    print(mongo_query)
     skip_amount = (int(page_number) - 1) * 9
     article = mongo.db.article
     _articles = (article.find(mongo_query)
@@ -74,17 +79,17 @@ def article_dates():
 @main.route('/article/<id>')
 def article_by_id(id):
     article = mongo.db.article
-    article = article.find_one({ '_id': ObjectId(id) })
+    _article = article.find_one({ '_id': ObjectId(id) })
     item = {
-        'id': str(article['_id']),
-        'img_url': article['img_url'],
-        'img_alt': article['img_alt'],
-        'title': article['title'],
-        'author': article['author'],
-        'date': article['date'],
-        'summary': article['summary'],
-        'content': article['content'],
-        'is_main': article['is_main'],
+        'id': str(_article['_id']),
+        'img_url': _article['img_url'],
+        'img_alt': _article['img_alt'],
+        'title': _article['title'],
+        'author': _article['author'],
+        'date': _article['date'],
+        'summary': _article['summary'],
+        'content': _article['content'],
+        'is_main': _article['is_main'],
     }
     return jsonify(
         status=True,
