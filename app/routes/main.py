@@ -15,20 +15,21 @@ def index(decoded_token):
         message=decoded_token
     )
 
+
 @main.route('/article')
 def article():
-    query = {}
+    mongo_query = {}
     date = request.args.get('date', None)
     if date:
-        query['date'] = { '$regex' :  date }
+        mongo_query['date'] = { '$regex' :  date }
     page_number = request.args.get('pageNumber')
     skip_amount = (int(page_number) - 1) * 9
     article = mongo.db.article
-    _articles = (article.find(query)
+    _articles = (article.find(mongo_query)
                         .sort( [['_id', -1]] )
                         .skip(skip_amount)
                         .limit(9))
-
+    count = article.find(mongo_query).count()
     item = {}
     data = []
     for article in _articles:
@@ -46,7 +47,8 @@ def article():
         data.append(item)
     return jsonify(
         status=True,
-        data=data
+        data=data,
+        count=count,
     )
 
 
@@ -55,12 +57,13 @@ def search_article():
     query = request.args.get('query', None)
     page_number = request.args.get('pageNumber')
     skip_amount = (int(page_number) - 1) * 9
+    mongo_query = {'$text': { '$search': query }}
     article = mongo.db.article
-    _articles = (article.find({'$text': { '$search': query }})
+    _articles = (article.find(mongo_query)
                         .sort( [['_id', -1]] )
                         .skip(skip_amount)
                         .limit(9))
-
+    count = article.find(mongo_query).count()
     item = {}
     data = []
     for article in _articles:
@@ -78,7 +81,8 @@ def search_article():
         data.append(item)
     return jsonify(
         status=True,
-        data=data
+        data=data,
+        count=count,
     )
 
 
@@ -119,19 +123,6 @@ def article_by_id(id):
     )
 
 
-@main.route('/article-count')
-def article_count():
-    mongo_query = {}
-    date = request.args.get('date', None)
-    query = request.args.get('query', None)
-    if date:
-        mongo_query['date'] = { '$regex' :  date }
-    if query:
-        mongo_query['$text'] = { '$search': query }
-    article = mongo.db.article
-    count = article.find(mongo_query).count()
-    return jsonify({ 'total': count })
-
 @main.route('/article', methods=['POST'])
 @token_required
 def createarticle(decoded_token):
@@ -158,6 +149,7 @@ def createarticle(decoded_token):
         status=True,
         message='Article saved successfully!'
     ), 201
+
 
 @main.route('/article', methods=['PUT'])
 @token_required
