@@ -23,14 +23,12 @@ def article():
     query = request.args.get('query', None)
     is_main = request.args.get('main', None)
     page_number = request.args.get('pageNumber')
-    print(is_main)
     if is_main and not query and not date:
         mongo_query['is_main'] = True if is_main == 'true' else False
     if date:
         mongo_query['date'] = { '$regex' :  date }
     if query:
         mongo_query['$text'] = { '$search': query }
-    print(mongo_query)
     skip_amount = (int(page_number) - 1) * 9
     article = mongo.db.article
     _articles = (article.find(mongo_query)
