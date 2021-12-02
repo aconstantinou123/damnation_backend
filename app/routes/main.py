@@ -35,7 +35,7 @@ def article():
                         .sort( [['_id', -1]] )
                         .skip(skip_amount)
                         .limit(9))
-    count = article.find(mongo_query).count()
+    count = len(list(article.find(mongo_query)))
     item = {}
     data = []
     for article in _articles:

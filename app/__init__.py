@@ -31,4 +31,7 @@ def create_app():
     from .routes.content import content as content_blueprint
     application.register_blueprint(content_blueprint)
 
+    from .routes.files import files as files_blueprint
+    application.register_blueprint(files_blueprint)
+
     return application
