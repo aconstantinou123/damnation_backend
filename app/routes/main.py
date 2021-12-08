@@ -48,6 +48,7 @@ def article():
             'date': article['date'],
             'summary': article['summary'],
             'content': article['content'],
+            'filename': article.get('filename', None),
             'is_main': article['is_main'],
         }
         data.append(item)
@@ -87,6 +88,7 @@ def article_by_id(id):
         'date': _article['date'],
         'summary': _article['summary'],
         'content': _article['content'],
+        'filename': _article.get('filename', None),
         'is_main': _article['is_main'],
     }
     return jsonify(
@@ -101,7 +103,7 @@ def createarticle(decoded_token):
     article = mongo.db.article
     data = request.get_json(force=True)
     article_to_create = data['article']
-
+    print(article_to_create)
     if article_to_create['is_main']:
         article.find_one_and_update(
             {
