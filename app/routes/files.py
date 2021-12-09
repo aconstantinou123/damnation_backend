@@ -33,16 +33,14 @@ def save_file():
     return jsonify(
         status=True,
         filename=file.filename,
-    )
+    ), 201
 
 @files.route('/files', methods=['PUT'])
 def edit_file():
-    print('request', request.form)
     new_file = request.files.get('NewFile', None)
     file_to_delete = request.form.get('FileToDelete', None)
     filename = None
     if file_to_delete:
-        print(file_to_delete)
         damnation_bucket.delete_objects(
             Delete={
                 'Objects': [
@@ -55,10 +53,11 @@ def edit_file():
     if new_file:
         damnation_bucket.Object(new_file.filename).put(Body=new_file.read())
         filename = new_file.filename
+    print('filename', filename)
     return jsonify(
         status=True,
         filename=filename,
-    )
+    ), 201
 
 
 @files.route('/files/<filename>')
@@ -68,3 +67,20 @@ def get_file(filename):
     s3_object.download_fileobj(a_file)
     a_file.seek(0)
     return send_file(a_file, mimetype=s3_object.content_type)
+
+
+@files.route('/files/<filename>', methods=['DELETE'])
+def delete_file(filename):
+    damnation_bucket.delete_objects(
+        Delete={
+            'Objects': [
+                {
+                    'Key': filename,
+                },
+            ],
+        },
+    )
+    return jsonify(
+        status=True,
+        message='Article deleted successfully!'
+    ), 204
