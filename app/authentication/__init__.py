@@ -29,11 +29,11 @@ def token_required(f):
     def decorator(*args, **kwargs):
         token = None
         if 'Authorization' in request.headers:
-                token = request.headers['Authorization'].split(' ')[1]
+            token = request.headers['Authorization'].split(' ')[1]
         elif 'token' in request.cookies:
-                token = request.cookies['token']
+            token = request.cookies['token']
         if not token:
-                return jsonify({'message': 'a valid token is missing'})
+            return jsonify({'message': 'a valid token is missing'})
         try:
             decoded_token = jwt.decode(token, os.getenv('SECRET_KEY'), algorithms=["HS256"])
         except:

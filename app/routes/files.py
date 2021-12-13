@@ -1,4 +1,5 @@
 import os
+import uuid
 from io import BytesIO
 from flask import (
     Flask,
@@ -14,6 +15,9 @@ from app.authentication import token_required
 MINIO_URL = os.getenv('MINIO_URL')
 MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY')
 MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY')
+ACCEPTED_FILE_TYPES = ['application/pdf', 'image/png', 'image/jpg', 'image/jpeg']
+FILE_TYPE_ERROR = 'File type not allowed. Supported file types: png, jpg/jpeg or pdf'
+FILE_NAME_ERROR = 'File already exists. Please choose another file/rename current file'
 
 s3 = boto3.resource(
     's3',
@@ -26,14 +30,21 @@ damnation_bucket = s3.Bucket('damnation')
 
 files = Blueprint('files', __name__)
     
+
 @files.route('/files', methods=['POST'])
 def save_file():
     file = request.files['File']
+    objs = list(damnation_bucket.objects.filter(Prefix=file.filename))
+    if any([w.key == file.filename for w in objs]):
+        return jsonify({'message': FILE_NAME_ERROR}), 403
+    if file.content_type not in ACCEPTED_FILE_TYPES:
+        return jsonify({'message': FILE_TYPE_ERROR}), 415
     damnation_bucket.Object(file.filename).put(Body=file.read())
     return jsonify(
         status=True,
         filename=file.filename,
     ), 201
+
 
 @files.route('/files', methods=['PUT'])
 def edit_file():
@@ -51,9 +62,13 @@ def edit_file():
             },
         )
     if new_file:
+        objs = list(damnation_bucket.objects.filter(Prefix=new_file.filename))
+        if any([w.key == new_file.filename for w in objs]):
+            return jsonify({'message': FILE_NAME_ERROR}), 403
+        if new_file.content_type not in ACCEPTED_FILE_TYPES:
+            return jsonify({'message': FILE_TYPE_ERROR}), 415
         damnation_bucket.Object(new_file.filename).put(Body=new_file.read())
         filename = new_file.filename
-    print('filename', filename)
     return jsonify(
         status=True,
         filename=filename,
