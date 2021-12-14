@@ -103,7 +103,6 @@ def createarticle(decoded_token):
     article = mongo.db.article
     data = request.get_json(force=True)
     article_to_create = data['article']
-    print(article_to_create)
     if article_to_create['is_main']:
         article.find_one_and_update(
             {
