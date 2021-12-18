@@ -31,7 +31,7 @@ def login():
 
     res = make_response(body, 200)
     res.headers['Authorization'] = f'Bearer {token}'
-    res.set_cookie('token', token, httponly=True)
+    res.set_cookie('damnation_token', token, httponly=True)
     return res
 
 
@@ -63,7 +63,7 @@ def signup(decoded_token):
 
 @auth.route('/persist-login', methods=['POST'])
 @token_required
-def index(decoded_token):
+def persist_login(decoded_token):
     user = mongo.db.user
     _id = decoded_token['sub']
 
@@ -84,12 +84,12 @@ def index(decoded_token):
 
     res = make_response(body, 200)
     res.headers['Authorization'] = f'Bearer {token}'
-    res.set_cookie('token', token, httponly=True)
+    res.set_cookie('damnation_token', token, httponly=True)
     return res
 
 @auth.route('/logout', methods=['POST'])
 def logout():
     res = make_response('Logout successful', 204)
-    res.delete_cookie(key='token') 
+    res.delete_cookie(key='damnation_token') 
     return res
 

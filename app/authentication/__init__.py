@@ -30,8 +30,8 @@ def token_required(f):
         token = None
         if 'Authorization' in request.headers:
             token = request.headers['Authorization'].split(' ')[1]
-        elif 'token' in request.cookies:
-            token = request.cookies['token']
+        elif 'damnation_token' in request.cookies:
+            token = request.cookies['damnation_token']
         if not token:
             return jsonify({'message': 'a valid token is missing'})
         try:

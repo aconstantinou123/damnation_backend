@@ -15,7 +15,16 @@ from app.authentication import token_required
 MINIO_URL = os.getenv('MINIO_URL')
 MINIO_ACCESS_KEY = os.getenv('MINIO_ACCESS_KEY')
 MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY')
-ACCEPTED_FILE_TYPES = ['application/pdf', 'image/png', 'image/jpg', 'image/jpeg']
+ACCEPTED_FILE_TYPES = [
+    'application/pdf',
+    'image/png',
+    'image/jpg',
+    'image/jpeg',
+    'audio/mpeg',
+    'audio/wav',
+    'video/mp4',
+    'video/x-msvideo',
+]
 FILE_TYPE_ERROR = 'File type not allowed. Supported file types: png, jpg/jpeg or pdf'
 FILE_NAME_ERROR = 'File already exists. Please choose another file/rename current file'
 
