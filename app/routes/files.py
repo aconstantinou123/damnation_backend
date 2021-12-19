@@ -18,14 +18,12 @@ MINIO_SECRET_KEY = os.getenv('MINIO_SECRET_KEY')
 ACCEPTED_FILE_TYPES = [
     'application/pdf',
     'image/png',
-    'image/jpg',
     'image/jpeg',
     'audio/mpeg',
     'audio/wav',
     'video/mp4',
-    'video/x-msvideo',
 ]
-FILE_TYPE_ERROR = 'File type not allowed. Supported file types: png, jpg/jpeg or pdf'
+FILE_TYPE_ERROR = 'File type not allowed. Supported file types: png, jpg/jpeg, pdf, mp3, wav, mp4'
 FILE_NAME_ERROR = 'File already exists. Please choose another file/rename current file'
 
 s3 = boto3.resource(
@@ -41,7 +39,8 @@ files = Blueprint('files', __name__)
     
 
 @files.route('/files', methods=['POST'])
-def save_file():
+@token_required
+def save_file(decoded_token):
     file = request.files['File']
     objs = list(damnation_bucket.objects.filter(Prefix=file.filename))
     if any([w.key == file.filename for w in objs]):
@@ -56,10 +55,17 @@ def save_file():
 
 
 @files.route('/files', methods=['PUT'])
-def edit_file():
+@token_required
+def edit_file(decoded_token):
     new_file = request.files.get('NewFile', None)
     file_to_delete = request.form.get('FileToDelete', None)
     filename = None
+    if new_file:
+        objs = list(damnation_bucket.objects.filter(Prefix=new_file.filename))
+        if any([w.key == new_file.filename for w in objs]):
+            return jsonify({'message': FILE_NAME_ERROR}), 403
+        if new_file.content_type not in ACCEPTED_FILE_TYPES:
+            return jsonify({'message': FILE_TYPE_ERROR}), 415
     if file_to_delete:
         damnation_bucket.delete_objects(
             Delete={
@@ -71,11 +77,6 @@ def edit_file():
             },
         )
     if new_file:
-        objs = list(damnation_bucket.objects.filter(Prefix=new_file.filename))
-        if any([w.key == new_file.filename for w in objs]):
-            return jsonify({'message': FILE_NAME_ERROR}), 403
-        if new_file.content_type not in ACCEPTED_FILE_TYPES:
-            return jsonify({'message': FILE_TYPE_ERROR}), 415
         damnation_bucket.Object(new_file.filename).put(Body=new_file.read())
         filename = new_file.filename
     return jsonify(
@@ -94,7 +95,8 @@ def get_file(filename):
 
 
 @files.route('/files/<filename>', methods=['DELETE'])
-def delete_file(filename):
+@token_required
+def delete_file(decoded_token, filename):
     damnation_bucket.delete_objects(
         Delete={
             'Objects': [
