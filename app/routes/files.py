@@ -6,7 +6,7 @@ from flask import (
     request,
     jsonify,
     Blueprint,
-    send_file
+    send_file,
 )
 import boto3
 from botocore.client import Config
@@ -36,7 +36,11 @@ s3 = boto3.resource(
 damnation_bucket = s3.Bucket('damnation')
 
 files = Blueprint('files', __name__)
-    
+
+@files.after_request
+def after_request(response):
+    response.headers.add('Accept-Ranges', 'bytes')
+    return response
 
 @files.route('/files', methods=['POST'])
 @token_required
@@ -87,11 +91,14 @@ def edit_file(decoded_token):
 
 @files.route('/files/<filename>')
 def get_file(filename):
-    a_file = BytesIO()
+    file = BytesIO()
     s3_object = s3.Object('damnation', filename)
-    s3_object.download_fileobj(a_file)
-    a_file.seek(0)
-    return send_file(a_file, mimetype=s3_object.content_type)
+    s3_object.download_fileobj(file)
+    file.seek(0)
+    return send_file(
+        file, 
+        mimetype=s3_object.content_type,
+    )
 
 
 @files.route('/files/<filename>', methods=['DELETE'])
