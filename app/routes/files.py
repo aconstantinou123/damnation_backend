@@ -1,5 +1,7 @@
 import os
 import uuid
+import mimetypes
+import re
 from io import BytesIO
 from flask import (
     Flask,
@@ -7,6 +9,7 @@ from flask import (
     jsonify,
     Blueprint,
     send_file,
+    Response,
 )
 import boto3
 from botocore.client import Config
@@ -25,6 +28,7 @@ ACCEPTED_FILE_TYPES = [
 ]
 FILE_TYPE_ERROR = 'File type not allowed. Supported file types: png, jpg/jpeg, pdf, mp3, wav, mp4'
 FILE_NAME_ERROR = 'File already exists. Please choose another file/rename current file'
+BUCKET_NAME = 'damnation'
 
 s3 = boto3.resource(
     's3',
@@ -33,7 +37,7 @@ s3 = boto3.resource(
     aws_secret_access_key=MINIO_SECRET_KEY,
     config=Config(signature_version='s3v4')
 )
-damnation_bucket = s3.Bucket('damnation')
+damnation_bucket = s3.Bucket(BUCKET_NAME)
 
 files = Blueprint('files', __name__)
 
@@ -92,13 +96,44 @@ def edit_file(decoded_token):
 @files.route('/files/<filename>')
 def get_file(filename):
     file = BytesIO()
-    s3_object = s3.Object('damnation', filename)
+    s3_object = s3.Object(BUCKET_NAME, filename)
     s3_object.download_fileobj(file)
-    file.seek(0)
-    return send_file(
-        file, 
-        mimetype=s3_object.content_type,
+    range_header = request.headers.get('Range', None)
+
+    if not range_header: 
+        file.seek(0)
+        return send_file(
+            file, 
+            mimetype=s3_object.content_type,
+        )
+
+    size = file.getbuffer().nbytes  
+    
+    m = re.search('(\d+)-(\d*)', range_header)
+    g = m.groups()
+    
+    byte1 = int(g[0]) if g[0] else 0
+    byte2 = int(g[1]) if g[1] else None
+
+    length = size - byte1
+    if byte2 is not None:
+        length = byte2 + 1 - byte1
+    
+    file_chunk = None
+    file.seek(byte1)
+    file_chunk = file.read(length)
+
+    res = Response(
+        file_chunk, 
+        206,
+        mimetype=s3_object.content_type, 
+        direct_passthrough=True
     )
+    res.headers.add(
+        'Content-Range', 
+        f'bytes {byte1}-{byte1 + length - 1}/{size}'
+    )
+    return res
 
 
 @files.route('/files/<filename>', methods=['DELETE'])
