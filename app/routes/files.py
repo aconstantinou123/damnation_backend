@@ -114,10 +114,8 @@ def get_file(filename):
     
     byte1 = int(g[0]) if g[0] else 0
     byte2 = int(g[1]) if g[1] else None
-
-    length = size - byte1
-    if byte2 is not None:
-        length = byte2 + 1 - byte1
+    
+    length = size - byte1 if byte2 is None else byte2 + 1 - byte1
     
     file_chunk = None
     file.seek(byte1)
