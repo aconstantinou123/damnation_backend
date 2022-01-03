@@ -48,6 +48,7 @@ def article():
             'date': article['date'],
             'summary': article['summary'],
             'content': article['content'],
+            'extra_info': article.get('extra_info', None),
             'filename': article.get('filename', None),
             'is_main': article['is_main'],
         }
@@ -88,6 +89,7 @@ def article_by_id(id):
         'date': _article['date'],
         'summary': _article['summary'],
         'content': _article['content'],
+        'extra_info': _article.get('extra_info', None),
         'filename': _article.get('filename', None),
         'is_main': _article['is_main'],
     }
